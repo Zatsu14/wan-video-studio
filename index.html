@@ -862,10 +862,18 @@ function saveCfg(){
 async function testApi(){
   const url=document.getElementById('cfgUrl').value.trim();
   toast('Test vers '+url+'…','in');
+  if(location.protocol==='file:'){toast('⚠ Lance via "python -m http.server 8080" puis ouvre http://localhost:8080 — les requêtes sont bloquées en file://','er');return}
   try{
-    const r=await fetch(`${url}/info`,{signal:AbortSignal.timeout(6000)});
-    toast(r.ok?'Connexion réussie ✅ API Gradio détectée':'Réponse '+r.status+' — API peut-être active',r.ok?'ok':'in')
-  }catch(e){toast('Connexion échouée — vérif URL ou démarre Wan2.1','er')}
+    // essaie /queue/status (Gradio), puis / en fallback
+    let ok=false;
+    for(const ep of['/queue/status','/']){
+      try{
+        const r=await fetch(url+ep,{signal:AbortSignal.timeout(5000)});
+        if(r.status<500){ok=true;break}
+      }catch{}
+    }
+    toast(ok?'Connexion réussie ✅ Wan2GP détecté':'Serveur inaccessible — vérif URL',ok?'ok':'er')
+  }catch(e){toast('Connexion échouée — vérif URL ou démarre Wan2GP','er')}
 }
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
