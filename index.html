@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wan2.1 Studio — Créateur de Vidéos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--bg2:#101010;--bg3:#181818;
+  --gr:#00c85a;--grl:#00ff70;--grd:#008c3e;
+  --tx:#f0f0f0;--tx2:#6e6e6e;--tx3:#333;
+  --bd:#222;--bd2:#181818;
+  --er:#ff4444;--ok:#00c85a;
+  --glow:0 0 18px rgba(0,200,90,.3);
+  --glowbig:0 0 32px rgba(0,200,90,.2)
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 60%,rgba(0,200,90,.04) 0%,transparent 55%),radial-gradient(ellipse at 85% 15%,rgba(0,255,100,.03) 0%,transparent 45%);pointer-events:none;z-index:0}
+
+/* CANVAS STARS */
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+
+/* HEADER */
+header{position:fixed;top:0;left:0;right:0;height:58px;background:rgba(8,8,8,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;z-index:100;gap:16px}
+.logo{font-size:17px;font-weight:800;color:var(--tx);letter-spacing:-0.5px;white-space:nowrap;flex-shrink:0}
+.logo span{color:var(--gr)}
+nav{display:flex;gap:1px;flex:1;overflow-x:auto}
+nav::-webkit-scrollbar{display:none}
+.nb{background:none;border:none;color:var(--tx2);padding:6px 13px;border-radius:6px;cursor:pointer;font-size:13px;white-space:nowrap;transition:all .15s;position:relative;font-family:inherit;font-weight:500}
+.nb:hover{color:var(--tx);background:rgba(255,255,255,.04)}
+.nb.active{color:var(--gr);background:rgba(0,200,90,.07)}
+.nb.active::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:50%;height:2px;background:var(--gr);border-radius:2px}
+.cfg-btn{background:none;border:1px solid var(--bd);color:var(--tx2);width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.cfg-btn:hover{color:var(--tx);border-color:var(--gr);box-shadow:var(--glow)}
+
+/* MAIN */
+main{max-width:1080px;margin:0 auto;padding:78px 20px 60px;position:relative;z-index:1}
+.section{display:none;animation:fadeUp .25s ease}
+.section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* HEADINGS */
+.sec-h{font-size:22px;font-weight:800;letter-spacing:-0.5px;margin-bottom:5px}
+.sec-h span{color:var(--gr)}
+.sec-sub{color:var(--tx2);font-size:13px;margin-bottom:26px}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:18px;margin-bottom:12px}
+.card-h{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:14px;display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:.5px}
+
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+label{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px}
+input[type=text],input[type=url],input[type=number],textarea,select{background:var(--bg3);border:1px solid var(--bd);color:var(--tx);padding:9px 11px;border-radius:6px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--gr);box-shadow:0 0 0 3px rgba(0,200,90,.12)}
+textarea{resize:vertical;min-height:70px}
+select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236e6e6e' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px}
+.fr{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
+.ht{font-size:11px;color:var(--tx3);margin-top:3px}
+
+/* PILLS */
+.pg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.pill{background:var(--bg3);border:1px solid var(--bd);color:var(--tx2);padding:6px 13px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;transition:all .15s;user-select:none}
+.pill:hover{border-color:rgba(0,200,90,.5);color:var(--tx)}
+.pill.active{background:rgba(0,200,90,.1);border-color:rgba(0,200,90,.5);color:var(--gr)}
+
+/* SECTION LABEL */
+.sl{font-size:10px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;margin-top:18px;opacity:.8}
+.sl:first-child{margin-top:0}
+
+/* BUTTONS */
+.btn{background:var(--gr);border:none;color:#000;padding:9px 18px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--grl);box-shadow:var(--glow)}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-go{background:var(--gr);color:#000}
+.btn-go:hover{background:var(--grl);box-shadow:var(--glow)}
+.btn-ol{background:transparent;border:1px solid var(--bd);color:var(--tx2);font-weight:500}
+.btn-ol:hover{border-color:rgba(0,200,90,.4);color:var(--tx);background:rgba(0,200,90,.05)}
+.btn-er{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.2);color:var(--er);font-weight:500}
+.btn-er:hover{background:rgba(255,68,68,.18)}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* UNIVERSE */
+.ugrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:18px}
+.cc{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:14px;position:relative;transition:border-color .15s}
+.cc:hover{border-color:rgba(0,200,90,.4)}
+.cc-name{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:6px}
+.cc-desc{font-size:12px;color:var(--tx2);margin-bottom:10px;line-height:1.5}
+.cdots{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.cdot{width:11px;height:11px;border-radius:50%;border:1px solid rgba(255,255,255,.12)}
+.cc-pow{font-size:11px;color:var(--gr);font-style:italic;opacity:.8}
+.cc-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cc-del:hover{background:rgba(255,68,68,.15);color:var(--er)}
+.add-c{background:transparent;border:1px dashed var(--bd2);border-radius:8px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--tx3);font-size:13px;transition:all .15s;min-height:100px}
+.add-c:hover{border-color:rgba(0,200,90,.4);color:var(--gr);background:rgba(0,200,90,.04)}
+
+/* STORYBOARD */
+.sbl{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.sbc{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:13px;display:flex;align-items:center;gap:13px;cursor:grab;transition:all .15s}
+.sbc:hover{border-color:rgba(0,200,90,.4)}
+.sbc.dragging{opacity:.35;cursor:grabbing}
+.sbc.drag-over{border-color:var(--gr);background:rgba(0,200,90,.05)}
+.sbn{width:32px;height:32px;border-radius:6px;background:rgba(0,200,90,.08);border:1px solid rgba(0,200,90,.3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:var(--gr);flex-shrink:0}
+.sbi{flex:1;min-width:0}
+.sbi-t{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbi-p{font-size:11px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stags{display:flex;gap:4px;flex-shrink:0}
+.tag{background:rgba(0,200,90,.08);border:1px solid rgba(0,200,90,.2);color:var(--gr);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+.tag.go{background:rgba(255,255,255,.05);border-color:var(--bd);color:var(--tx2)}
+.sba{display:flex;gap:6px;flex-shrink:0}
+
+/* VIDEO */
+.vc{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:14px}
+.vc video{width:100%;height:100%;object-fit:contain}
+.vph{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--tx3)}
+.vph .vi{font-size:44px;opacity:.3}
+
+/* GEN STATUS */
+.gs{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:18px;margin-bottom:12px}
+.pb{height:2px;background:var(--bd);border-radius:2px;overflow:hidden;margin:12px 0}
+.pf{height:100%;background:var(--gr);border-radius:2px;transition:width .5s ease;width:0;box-shadow:0 0 8px rgba(0,200,90,.6)}
+.pf.ind{width:30%;animation:ind 1.4s ease-in-out infinite}
+@keyframes ind{0%{transform:translateX(-250%)}100%{transform:translateX(450%)}}
+.st{font-size:13px;color:var(--tx2)}
+.st strong{color:var(--tx)}
+
+/* HISTORY */
+.hg{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.hc{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;overflow:hidden;transition:all .15s}
+.hc:hover{border-color:rgba(0,200,90,.4);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.ht2{width:100%;aspect-ratio:16/9;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:28px;overflow:hidden}
+.ht2 video{width:100%;height:100%;object-fit:cover}
+.hi{padding:11px}
+.hd{font-size:11px;color:var(--tx3);margin-bottom:3px}
+.hp{font-size:12px;color:var(--tx2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}
+.ha{display:flex;gap:5px}
+
+/* PROMPT AREA */
+.pa{background:var(--bg3);border:1px solid var(--bd);border-radius:6px;font-family:"Cascadia Code","Fira Code","Courier New",monospace;font-size:12px;color:#7fffb0}
+.pl{font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700;opacity:.7}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);z-index:200;display:none;align-items:center;justify-content:center;animation:fadeUp .2s}
+.mo.open{display:flex}
+.md{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:26px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto;position:relative}
+.md-h{font-size:18px;font-weight:800;letter-spacing:-0.3px;color:var(--tx);margin-bottom:22px}
+.md-x{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--tx2);font-size:18px;cursor:pointer;width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.md-x:hover{background:rgba(255,255,255,.06);color:var(--tx)}
+
+/* TOAST */
+#toast{position:fixed;bottom:22px;right:22px;z-index:300;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.ti{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--tx);box-shadow:0 4px 20px rgba(0,0,0,.5);animation:slideIn .2s ease;pointer-events:auto}
+.ti.ok{border-left:2px solid var(--ok)}
+.ti.er{border-left:2px solid var(--er)}
+.ti.in{border-left:2px solid var(--gr)}
+@keyframes slideIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+
+/* UTILS */
+.fb{display:flex;justify-content:space-between;align-items:center}
+.fl{display:flex;align-items:center}
+.g8{gap:8px}
+.g6{gap:6px}
+.mt16{margin-top:16px}
+.mb14{margin-bottom:14px}
+.div{border:none;border-top:1px solid var(--bd);margin:20px 0}
+.empty{text-align:center;padding:50px 20px;color:var(--tx3)}
+.empty .ei{font-size:42px;margin-bottom:14px;opacity:.3}
+.empty p{font-size:13px;margin-bottom:18px}
+.cr-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+input[type=color]{width:34px;height:34px;padding:2px;border-radius:5px;cursor:pointer;flex-shrink:0}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--gr)}
+
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@media(max-width:600px){.fr{grid-template-columns:1fr}.hg{grid-template-columns:1fr}.ugrid{grid-template-columns:1fr}header{padding:0 12px}main{padding:70px 12px 50px}.logo{font-size:15px}}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<header>
+  <div class="logo">▶ Wan<span>2.1</span> Studio</div>
+  <nav>
+    <button class="nb active" onclick="show('scene')">✨ Créer</button>
+    <button class="nb" onclick="show('universe')">🌌 Univers</button>
+    <button class="nb" onclick="show('storyboard')">🎬 Storyboard</button>
+    <button class="nb" onclick="show('generation')">🎥 Génération</button>
+    <button class="nb" onclick="show('history')">📚 Historique</button>
+  </nav>
+  <button class="cfg-btn" onclick="openCfg()" title="Configuration">⚙</button>
+</header>
+
+<main>
+
+<!-- CRÉER -->
+<div id="s-scene" class="section active">
+  <div class="sec-h">✨ Création de <span>Scène</span></div>
+  <p class="sec-sub">Décris ta vision — l'app génère un prompt optimisé en anglais pour Wan2.1</p>
+
+  <div class="card">
+    <div class="sl">🎨 Style visuel</div>
+    <div class="pg" id="g-style">
+      <div class="pill active" data-v="cinematic" onclick="pill(this,'style')">🎬 Cinématique</div>
+      <div class="pill" data-v="anime" onclick="pill(this,'style')">⛩ Animé</div>
+      <div class="pill" data-v="realistic" onclick="pill(this,'style')">📷 Réaliste</div>
+      <div class="pill" data-v="cgi" onclick="pill(this,'style')">💻 CGI</div>
+    </div>
+
+    <div class="sl">⚔ Mode spécial</div>
+    <div class="pg" id="g-mode">
+      <div class="pill active" data-v="none" onclick="pill(this,'mode')">— Aucun</div>
+      <div class="pill" data-v="combat1v1" onclick="pill(this,'mode')">⚔ Combat 1v1</div>
+      <div class="pill" data-v="battle" onclick="pill(this,'mode')">🏰 Bataille épique</div>
+      <div class="pill" data-v="ambiance" onclick="pill(this,'mode')">🌙 Ambiance & Décor</div>
+      <div class="pill" data-v="character" onclick="pill(this,'mode')">👑 Présentation personnage</div>
+    </div>
+
+    <div class="fr">
+      <div>
+        <div class="sl" style="margin-top:0">🌅 Moment</div>
+        <div class="pg" id="g-moment">
+          <div class="pill" data-v="dawn" onclick="pill(this,'moment')">🌅 Aube</div>
+          <div class="pill active" data-v="day" onclick="pill(this,'moment')">☀ Jour</div>
+          <div class="pill" data-v="dusk" onclick="pill(this,'moment')">🌇 Crépuscule</div>
+          <div class="pill" data-v="nightstorm" onclick="pill(this,'moment')">⛈ Nuit & Orage</div>
+        </div>
+      </div>
+      <div>
+        <div class="sl" style="margin-top:0">📽 Type de plan</div>
+        <div class="pg" id="g-shot">
+          <div class="pill" data-v="aerial" onclick="pill(this,'shot')">🦅 Aérien</div>
+          <div class="pill active" data-v="ground" onclick="pill(this,'shot')">🔽 Sol</div>
+          <div class="pill" data-v="tracking" onclick="pill(this,'shot')">🎥 Travelling</div>
+          <div class="pill" data-v="multi" onclick="pill(this,'shot')">🔀 Plans multiples</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sl">👥 Personnages (Mon Univers)</div>
+    <div class="pg" id="g-chars"><span style="color:var(--tx3);font-size:12px">Aucun personnage — crée-les dans l'onglet Univers</span></div>
+
+    <div class="sl">📍 Lieu (Mon Univers)</div>
+    <div class="pg" id="g-places"><span style="color:var(--tx3);font-size:12px">Aucun lieu — crée-les dans l'onglet Univers</span></div>
+
+    <div class="sl">📝 Description libre (français)</div>
+    <div class="fg">
+      <textarea id="scDesc" rows="4" placeholder="Décris ta scène… ex: Un guerrier solitaire se lève face à une forteresse en ruines, son manteau déchiré par le vent, prêt à affronter l'armée qui l'attend…" oninput="updPrompt()"></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="pl">⚡ Prompt généré (anglais) — éditable</div>
+    <div class="fg">
+      <textarea id="genPrompt" rows="4" class="pa" placeholder="Le prompt apparaîtra ici…"></textarea>
+    </div>
+    <div class="pl mt16">🚫 Negative prompt</div>
+    <div class="fg">
+      <textarea id="negPrompt" rows="2" placeholder="low quality, blurry…">low quality, blurry, distorted, watermark, text, ugly, deformed, bad anatomy</textarea>
+    </div>
+  </div>
+
+  <div class="fl g8">
+    <button class="btn btn-go" onclick="genFromScene()">🎬 Générer</button>
+    <button class="btn btn-ol" onclick="addToSB()">+ Storyboard</button>
+    <button class="btn btn-ol" onclick="cpyPrompt()">📋 Copier</button>
+  </div>
+</div>
+
+<!-- UNIVERS -->
+<div id="s-universe" class="section">
+  <div class="sec-h">🌌 Mon <span>Univers</span></div>
+  <p class="sec-sub">Personnages, lieux et ambiance réutilisables dans tes scènes</p>
+
+  <div class="card">
+    <div class="fb mb14">
+      <div class="card-h">👑 Personnages</div>
+      <button class="btn btn-sm" onclick="openCC()">+ Ajouter</button>
+    </div>
+    <div class="ugrid" id="charGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="fb mb14">
+      <div class="card-h">🏔 Lieux</div>
+      <button class="btn btn-sm" onclick="addPlace()">+ Ajouter</button>
+    </div>
+    <div id="placeList"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">🎭 Ambiance générale</div>
+    <div class="fg">
+      <label>Tonalité & style de ton univers</label>
+      <textarea id="univAmb" rows="3" placeholder="ex: Dark fantasy médiéval, magie corrompue, tons sombres, style Game of Thrones…" oninput="saveUniv()"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- STORYBOARD -->
+<div id="s-storyboard" class="section">
+  <div class="sec-h">🎬 Story<span>board</span></div>
+  <p class="sec-sub">Organise et génère tes scènes dans l'ordre</p>
+  <div id="sbList" class="sbl"></div>
+  <div class="fl g8">
+    <button class="btn" onclick="show('scene')">+ Nouvelle scène</button>
+    <button class="btn btn-go" onclick="genAll()">🎬 Tout générer</button>
+    <button class="btn btn-ol" onclick="clearSB()">🗑 Vider</button>
+  </div>
+</div>
+
+<!-- GÉNÉRATION -->
+<div id="s-generation" class="section">
+  <div class="sec-h">🎥 Géné<span>ration</span></div>
+  <p class="sec-sub">Statut en temps réel et aperçu de la vidéo</p>
+
+  <div class="gs">
+    <div class="fb">
+      <strong id="gsTitle">Prêt à générer</strong>
+      <button class="btn btn-sm btn-er" id="stopBtn" onclick="stopGen()" style="display:none">⬛ Stop</button>
+    </div>
+    <div class="pb"><div class="pf" id="pFill"></div></div>
+    <div class="st" id="gsText">Configure et lance depuis l'onglet "Créer"</div>
+  </div>
+
+  <div class="vc" id="vidCont">
+    <div class="vph"><div class="vi">🎬</div><div>La vidéo apparaîtra ici</div></div>
+  </div>
+
+  <div id="genActions" style="display:none" class="fl g8">
+    <button class="btn btn-go" onclick="dlVideo()">⬇ Télécharger</button>
+    <button class="btn btn-ol" onclick="saveHist()">📚 Historique</button>
+    <button class="btn btn-ol" onclick="show('scene')">🔄 Nouvelle scène</button>
+  </div>
+</div>
+
+<!-- HISTORIQUE -->
+<div id="s-history" class="section">
+  <div class="fb mb14">
+    <div>
+      <div class="sec-h">📚 Histo<span>rique</span></div>
+      <p class="sec-sub">Toutes tes générations</p>
+    </div>
+    <button class="btn btn-er btn-sm" onclick="clearHist()">🗑 Tout effacer</button>
+  </div>
+  <div class="hg" id="histGrid"></div>
+</div>
+
+</main>
+
+<!-- CONFIG MODAL -->
+<div class="mo" id="moConfig">
+  <div class="md">
+    <div class="md-h">⚙ Configuration</div>
+    <button class="md-x" onclick="closeCfg()">✕</button>
+
+    <div class="fg">
+      <label>URL de l'API Wan2.1</label>
+      <input type="url" id="cfgUrl" placeholder="http://localhost:7860">
+      <div class="ht">URL de ton instance Gradio locale</div>
+    </div>
+    <div class="fg">
+      <label>Type d'API</label>
+      <select id="cfgType">
+        <option value="gradio">Gradio (file d'attente SSE)</option>
+        <option value="direct">Direct POST</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Endpoint personnalisé (optionnel)</label>
+      <input type="text" id="cfgEp" placeholder="/run/predict">
+      <div class="ht">Vide = auto-détection</div>
+    </div>
+
+    <div class="div"></div>
+    <div class="card-h">🎛 Paramètres de génération</div>
+
+    <div class="fr">
+      <div class="fg">
+        <label>Résolution</label>
+        <select id="cfgRes">
+          <option value="832*480">832×480 — 16:9 paysage</option>
+          <option value="480*832">480×832 — 9:16 portrait</option>
+          <option value="1280*720">1280×720 — HD</option>
+          <option value="720*1280">720×1280 — HD portrait</option>
+          <option value="624*624">624×624 — Carré</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Frames</label>
+        <input type="number" id="cfgFrames" value="81" min="17" max="161" step="8">
+        <div class="ht">81 ≈ 5s à 16fps</div>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg">
+        <label>Steps</label>
+        <input type="number" id="cfgSteps" value="50" min="10" max="100">
+      </div>
+      <div class="fg">
+        <label>Guidance scale</label>
+        <input type="number" id="cfgGuidance" value="5" min="1" max="20" step="0.5">
+      </div>
+    </div>
+    <div class="fg">
+      <label>Seed (-1 = aléatoire)</label>
+      <input type="number" id="cfgSeed" value="-1">
+    </div>
+
+    <div class="div"></div>
+    <div class="fl g8">
+      <button class="btn btn-go" onclick="saveCfg()">💾 Sauvegarder</button>
+      <button class="btn btn-ol" onclick="testApi()">🔌 Tester connexion</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERSONNAGE MODAL -->
+<div class="mo" id="moChar">
+  <div class="md">
+    <div class="md-h" id="ccTitle">👑 Nouveau personnage</div>
+    <button class="md-x" onclick="closeCC()">✕</button>
+
+    <div class="fg">
+      <label>Nom</label>
+      <input type="text" id="ccName" placeholder="ex: Kael l'Obscur">
+    </div>
+    <div class="fg">
+      <label>Description</label>
+      <textarea id="ccDesc" rows="3" placeholder="ex: Guerrier maudit aux cheveux noirs, armure d'obsidienne, regard de braise…"></textarea>
+    </div>
+    <div class="fg">
+      <label>Pouvoirs / traits</label>
+      <input type="text" id="ccPowers" placeholder="ex: Magie des ombres, super-force, immortalité…">
+    </div>
+    <div class="fg">
+      <label>Couleurs principales</label>
+      <div class="cr-row" id="ccColors">
+        <input type="color" value="#1a1a2e">
+        <input type="color" value="#7b3fc0">
+        <input type="color" value="#c9a227">
+        <button class="btn btn-sm btn-ol" onclick="addCP()">+</button>
+      </div>
+    </div>
+
+    <div class="fl g8 mt16">
+      <button class="btn btn-go" onclick="saveCC()">💾 Sauvegarder</button>
+      <button class="btn btn-ol" onclick="closeCC()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const A = {
+  api:{
+    url:ls('wan_url')||'http://localhost:7860',
+    type:ls('wan_type')||'gradio',
+    ep:ls('wan_ep')||'',
+    res:ls('wan_res')||'832*480',
+    frames:+ls('wan_frames')||81,
+    steps:+ls('wan_steps')||50,
+    guidance:+(ls('wan_guidance')||5),
+    seed:+(ls('wan_seed')||-1)
+  },
+  sc:{style:'cinematic',mode:'none',moment:'day',shot:'ground',chars:[],place:''},
+  univ:jp(ls('wan_univ'))||{chars:[],places:[],ambiance:''},
+  sb:jp(ls('wan_sb'))||[],
+  hist:jp(ls('wan_hist'))||[],
+  gen:false,
+  abort:null,
+  vid:null,
+  prompt:null,
+  dragIdx:null,
+  ccEditIdx:-1
+};
+
+function ls(k){return localStorage.getItem(k)}
+function lss(k,v){localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v))}
+function jp(v){try{return v?JSON.parse(v):null}catch{return null}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// ─── STARS BACKGROUND ────────────────────────────────────────────────────────
+(()=>{
+  const cv=document.getElementById('stars'),ctx=cv.getContext('2d');
+  let stars=[];
+  function resize(){cv.width=innerWidth;cv.height=innerHeight;stars=Array.from({length:140},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.2+.2,a:Math.random(),d:Math.random()*.003+.001}))}
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    stars.forEach(s=>{
+      s.a+=s.d; if(s.a>1||s.a<0)s.d*=-1;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);
+      ctx.fillStyle=`rgba(0,220,100,${s.a*.45})`;ctx.fill()
+    });
+    requestAnimationFrame(draw)
+  }
+  window.addEventListener('resize',resize);resize();draw()
+})();
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  const m={scene:0,universe:1,storyboard:2,generation:3,history:4};
+  document.querySelectorAll('.nb')[m[id]].classList.add('active');
+  if(id==='universe')renderUniv();
+  if(id==='storyboard')renderSB();
+  if(id==='history')renderHist();
+}
+
+// ─── PILL SELECTION ───────────────────────────────────────────────────────────
+function pill(el,g){
+  document.querySelectorAll(`#g-${g} .pill`).forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  A.sc[g]=el.dataset.v;
+  updPrompt();
+}
+
+// ─── PROMPT BUILDER ───────────────────────────────────────────────────────────
+const STY={
+  cinematic:'cinematic shot, film grain, anamorphic lens, dramatic lighting, professional cinematography',
+  anime:'anime style, vibrant colors, fluid animation, Studio Ghibli quality, expressive characters',
+  realistic:'photorealistic, 8K UHD, lifelike details, natural lighting, professional photography',
+  cgi:'high-end CGI, Pixar quality, subsurface scattering, global illumination, smooth 3D animation'
+};
+const MOD={
+  none:'',
+  combat1v1:'intense one-on-one duel, dynamic combat, sparks flying, fierce determination, clash of weapons',
+  battle:'massive epic battle, thousands of warriors, sweeping destruction, glory and chaos',
+  ambiance:'atmospheric mood, environmental storytelling, world-building, immersive setting, emotional depth',
+  character:'heroic character reveal, dramatic pose, legendary presence, powerful full-body showcase'
+};
+const MOM={
+  dawn:'golden sunrise, warm orange-pink hues, morning mist, ethereal soft light',
+  day:'bright clear daylight, vivid colors, sharp details, blue sky, natural midday lighting',
+  dusk:'dramatic sunset, golden backlight, long purple shadows, sky ablaze in crimson',
+  nightstorm:'dark stormy night, lightning flashes, heavy rain, ominous thunderclouds, fog'
+};
+const SHT={
+  aerial:'aerial drone shot, bird\'s eye view, sweeping majestic movement',
+  ground:'ground level, dynamic low angle, powerful perspective, dust rising',
+  tracking:'smooth tracking shot, cinematic dolly movement, camera follows action',
+  multi:'multiple camera angles, dynamic cuts, varied perspectives, action sequence'
+};
+const FR_EN={guerrier:'warrior',guerrière:'warrior woman',château:'castle',forêt:'forest',montagne:'mountain',flammes:'flames',feu:'fire',épée:'sword',dragon:'dragon',magie:'magic',sombre:'dark',lumière:'light',ombre:'shadow',bataille:'battle',héros:'hero',armure:'armor',puissant:'powerful',ancien:'ancient',mystérieux:'mysterious',légendaire:'legendary',épique:'epic',ruines:'ruins',temple:'temple',ciel:'sky',nuages:'clouds',pluie:'rain',vent:'wind',sang:'blood',victoire:'victory',roi:'king',reine:'queen',mage:'sorcerer',démon:'demon',ange:'angel',elfe:'elf'};
+
+function adapt(t){let r=t;for(const[f,e]of Object.entries(FR_EN))r=r.replace(new RegExp(f,'gi'),e);return r}
+
+function buildPrompt(){
+  const sc=A.sc,parts=[];
+  if(STY[sc.style])parts.push(STY[sc.style]);
+  if(MOD[sc.mode])parts.push(MOD[sc.mode]);
+  const d=document.getElementById('scDesc').value.trim();
+  if(d)parts.push(adapt(d));
+  if(MOM[sc.moment])parts.push(MOM[sc.moment]);
+  if(SHT[sc.shot])parts.push(SHT[sc.shot]);
+  if(sc.chars.length){
+    const details=sc.chars.map(n=>{const c=A.univ.chars.find(x=>x.name===n);return c?`${n} (${c.desc.substring(0,70)})`:n});
+    parts.push('featuring '+details.join(' and '))
+  }
+  if(sc.place)parts.push('set in '+sc.place);
+  if(A.univ.ambiance)parts.push(A.univ.ambiance.substring(0,90));
+  parts.push('masterful composition, award-winning quality, immersive');
+  return parts.filter(Boolean).join(', ')
+}
+
+function updPrompt(){document.getElementById('genPrompt').value=buildPrompt()}
+function cpyPrompt(){navigator.clipboard.writeText(document.getElementById('genPrompt').value).then(()=>toast('Prompt copié !','ok'))}
+
+// ─── UNIVERSE ─────────────────────────────────────────────────────────────────
+function saveUniv(){A.univ.ambiance=document.getElementById('univAmb').value;lss('wan_univ',A.univ)}
+
+function renderUniv(){
+  document.getElementById('univAmb').value=A.univ.ambiance||'';
+  renderCG();renderPL()
+}
+
+function renderCG(){
+  const g=document.getElementById('charGrid');g.innerHTML='';
+  A.univ.chars.forEach((c,i)=>{
+    const d=document.createElement('div');d.className='cc';
+    d.innerHTML=`<button class="cc-del" onclick="delChar(${i})">✕</button>
+      <div class="cc-name">${esc(c.name)}</div>
+      <div class="cc-desc">${esc(c.desc)}</div>
+      <div class="cdots">${(c.colors||[]).map(col=>`<div class="cdot" style="background:${col}"></div>`).join('')}</div>
+      ${c.powers?`<div class="cc-pow">⚡ ${esc(c.powers)}</div>`:''}`;
+    g.appendChild(d)
+  });
+  const b=document.createElement('button');b.className='add-c';b.innerHTML='<span style="font-size:20px">+</span> Nouveau personnage';b.onclick=()=>openCC();
+  g.appendChild(b)
+}
+
+function renderPL(){
+  const l=document.getElementById('placeList');l.innerHTML='';
+  A.univ.places.forEach((p,i)=>{
+    const r=document.createElement('div');r.className='fl g6 mb14';
+    r.innerHTML=`<input type="text" value="${esc(p)}" onchange="A.univ.places[${i}]=this.value;saveUniv()" style="flex:1">
+      <button class="btn btn-sm btn-er" onclick="delPlace(${i})">✕</button>`;
+    l.appendChild(r)
+  })
+}
+
+function addPlace(){A.univ.places.push('Nouveau lieu');saveUniv();renderPL()}
+function delPlace(i){A.univ.places.splice(i,1);saveUniv();renderPL()}
+function delChar(i){A.univ.chars.splice(i,1);saveUniv();renderCG();updCharPills()}
+
+// ─── CHARACTER MODAL ──────────────────────────────────────────────────────────
+function openCC(idx=-1){
+  A.ccEditIdx=idx;
+  const isEdit=idx>=0,c=isEdit?A.univ.chars[idx]:{};
+  document.getElementById('ccTitle').textContent=isEdit?'✏ Modifier':'👑 Nouveau personnage';
+  document.getElementById('ccName').value=c.name||'';
+  document.getElementById('ccDesc').value=c.desc||'';
+  document.getElementById('ccPowers').value=c.powers||'';
+  const row=document.getElementById('ccColors');
+  // reset to 3 pickers + button
+  row.innerHTML=`<input type="color" value="${c.colors&&c.colors[0]||'#1a1a2e'}"><input type="color" value="${c.colors&&c.colors[1]||'#7b3fc0'}"><input type="color" value="${c.colors&&c.colors[2]||'#c9a227'}"><button class="btn btn-sm btn-ol" onclick="addCP()">+</button>`;
+  document.getElementById('moChar').classList.add('open')
+}
+function closeCC(){document.getElementById('moChar').classList.remove('open')}
+function addCP(){const r=document.getElementById('ccColors'),b=r.querySelector('button'),i=document.createElement('input');i.type='color';i.value='#ff0000';r.insertBefore(i,b)}
+
+function saveCC(){
+  const n=document.getElementById('ccName').value.trim();
+  if(!n){toast('Nom requis','er');return}
+  const c={name:n,desc:document.getElementById('ccDesc').value.trim(),powers:document.getElementById('ccPowers').value.trim(),colors:[...document.querySelectorAll('#ccColors input[type=color]')].map(i=>i.value)};
+  if(A.ccEditIdx>=0)A.univ.chars[A.ccEditIdx]=c;else A.univ.chars.push(c);
+  saveUniv();renderCG();updCharPills();closeCC();toast('Personnage sauvegardé !','ok')
+}
+
+function updCharPills(){
+  const cg=document.getElementById('g-chars');
+  if(!A.univ.chars.length){cg.innerHTML='<span style="color:var(--tx3);font-size:12px">Aucun personnage — crée-les dans Univers</span>';return}
+  cg.innerHTML='';
+  A.univ.chars.forEach(c=>{
+    const p=document.createElement('div');
+    p.className='pill'+(A.sc.chars.includes(c.name)?' active':'');
+    p.textContent=c.name;p.onclick=()=>toggleChar(p,c.name);
+    cg.appendChild(p)
+  });
+  const pg=document.getElementById('g-places');
+  if(!A.univ.places.length){pg.innerHTML='<span style="color:var(--tx3);font-size:12px">Aucun lieu — crée-les dans Univers</span>';return}
+  pg.innerHTML='';
+  A.univ.places.forEach(pl=>{
+    const p=document.createElement('div');
+    p.className='pill'+(A.sc.place===pl?' active':'');
+    p.textContent=pl;p.onclick=()=>togglePlace(p,pl);
+    pg.appendChild(p)
+  })
+}
+
+function toggleChar(el,n){
+  const i=A.sc.chars.indexOf(n);
+  if(i>=0){A.sc.chars.splice(i,1);el.classList.remove('active')}else{A.sc.chars.push(n);el.classList.add('active')}
+  updPrompt()
+}
+function togglePlace(el,pl){
+  if(A.sc.place===pl){A.sc.place='';document.querySelectorAll('#g-places .pill').forEach(p=>p.classList.remove('active'))}
+  else{A.sc.place=pl;document.querySelectorAll('#g-places .pill').forEach(p=>p.classList.remove('active'));el.classList.add('active')}
+  updPrompt()
+}
+
+// ─── STORYBOARD ───────────────────────────────────────────────────────────────
+function addToSB(){
+  A.sb.push({id:Date.now(),style:A.sc.style,mode:A.sc.mode,moment:A.sc.moment,shot:A.sc.shot,desc:document.getElementById('scDesc').value,prompt:document.getElementById('genPrompt').value,neg:document.getElementById('negPrompt').value,chars:[...A.sc.chars],place:A.sc.place,video:null,done:false});
+  lss('wan_sb',A.sb);toast('Scène ajoutée au storyboard !','ok')
+}
+
+function renderSB(){
+  const l=document.getElementById('sbList');
+  if(!A.sb.length){l.innerHTML='<div class="empty"><div class="ei">🎬</div><p>Storyboard vide</p><button class="btn" onclick="show(\'scene\')">+ Créer une scène</button></div>';return}
+  l.innerHTML='';
+  A.sb.forEach((sc,i)=>{
+    const c=document.createElement('div');c.className='sbc';c.draggable=true;c.dataset.i=i;
+    c.addEventListener('dragstart',()=>{A.dragIdx=i;c.classList.add('dragging')});
+    c.addEventListener('dragend',()=>c.classList.remove('dragging'));
+    c.addEventListener('dragover',e=>{e.preventDefault();c.classList.add('drag-over')});
+    c.addEventListener('dragleave',()=>c.classList.remove('drag-over'));
+    c.addEventListener('drop',e=>{
+      e.preventDefault();c.classList.remove('drag-over');
+      if(A.dragIdx!==null&&A.dragIdx!==i){const[m]=A.sb.splice(A.dragIdx,1);A.sb.splice(i,0,m);lss('wan_sb',A.sb);renderSB()}
+    });
+    const ico=sc.done?'✅':sc.status==='gen'?'⏳':'⏸';
+    c.innerHTML=`<div class="sbn">${i+1}</div>
+      <div class="sbi">
+        <div class="sbi-t">${ico} ${esc(sc.desc.substring(0,50)||'Scène '+(i+1))}${sc.desc.length>50?'…':''}</div>
+        <div class="sbi-p">${esc(sc.prompt.substring(0,80))}…</div>
+      </div>
+      <div class="stags"><div class="tag">${sc.style}</div><div class="tag go">${sc.moment}</div></div>
+      <div class="sba">
+        <button class="btn btn-sm" onclick="genScene(${i})">▶ Générer</button>
+        <button class="btn btn-sm btn-er" onclick="delSBScene(${i})">✕</button>
+      </div>`;
+    l.appendChild(c)
+  })
+}
+
+function delSBScene(i){A.sb.splice(i,1);lss('wan_sb',A.sb);renderSB()}
+function clearSB(){if(!confirm('Vider le storyboard ?'))return;A.sb=[];lss('wan_sb',A.sb);renderSB()}
+async function genScene(i){const sc=A.sb[i];A.prompt=sc.prompt;show('generation');await startGen(sc.prompt,sc.neg)}
+async function genAll(){for(let i=0;i<A.sb.length;i++){if(!A.sb[i].done){show('generation');await startGen(A.sb[i].prompt,A.sb[i].neg);if(A.vid){A.sb[i].video=A.vid;A.sb[i].done=true;lss('wan_sb',A.sb)}}}}
+
+// ─── GENERATION ───────────────────────────────────────────────────────────────
+async function genFromScene(){A.prompt=document.getElementById('genPrompt').value;show('generation');await startGen(A.prompt,document.getElementById('negPrompt').value)}
+
+function setStatus(t,msg,pct,ind=false){
+  document.getElementById('gsTitle').textContent=t;
+  document.getElementById('gsText').textContent=msg;
+  const f=document.getElementById('pFill');
+  f.className='pf'+(ind?' ind':'');
+  if(!ind)f.style.width=pct+'%'
+}
+
+function showVid(url){
+  document.getElementById('vidCont').innerHTML=`<video src="${url}" controls autoplay loop style="width:100%;height:100%"></video>`;
+  A.vid=url;
+  document.getElementById('genActions').style.display='flex'
+}
+
+async function startGen(prompt,neg){
+  if(A.gen){toast('Génération déjà en cours','er');return}
+  A.gen=true;A.vid=null;A.abort=new AbortController();
+  document.getElementById('stopBtn').style.display='inline-flex';
+  document.getElementById('genActions').style.display='none';
+  document.getElementById('vidCont').innerHTML='<div class="vph"><div class="vi" style="animation:spin 1.8s linear infinite">⚙</div><div>Génération en cours…</div></div>';
+  setStatus('🔄 Connexion…','Envoi vers '+A.api.url,5,true);
+  try{
+    if(A.api.type==='gradio')await genGradio(prompt,neg);
+    else await genDirect(prompt,neg)
+  }catch(e){
+    if(e.name==='AbortError'){setStatus('⬛ Arrêtée','Génération interrompue',0);toast('Arrêtée','in')}
+    else{setStatus('❌ Erreur',e.message,0);toast('Erreur: '+e.message,'er');console.error(e)}
+  }finally{A.gen=false;document.getElementById('stopBtn').style.display='none'}
+}
+
+async function genGradio(prompt,neg){
+  const sh=Math.random().toString(36).slice(2,10),base=A.api.url.replace(/\/$/,'');
+  const data=[prompt,neg||'low quality, blurry',A.api.res,A.api.frames,A.api.seed<0?Math.floor(Math.random()*2e9):A.api.seed,A.api.guidance,A.api.steps,false];
+  setStatus('📤 File d\'attente…','Envoi à l\'API Gradio',10);
+  const jr=await fetch(`${base}/queue/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data,fn_index:0,session_hash:sh}),signal:A.abort.signal});
+  if(!jr.ok){
+    // fallback direct
+    const r2=await fetch(`${base}/run/predict`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data}),signal:A.abort.signal});
+    if(!r2.ok)throw new Error(`HTTP ${r2.status}`);
+    handleResult(await r2.json(),base);return
+  }
+  setStatus('⏳ En attente…','Position dans la file',15);
+  await new Promise((res,rej)=>{
+    const es=new EventSource(`${base}/queue/data?session_hash=${sh}`);
+    let last=Date.now();
+    const ck=setInterval(()=>{if(Date.now()-last>35000){es.close();clearInterval(ck);rej(new Error('Timeout 35s'))}},5000);
+    A.abort.signal.addEventListener('abort',()=>{es.close();clearInterval(ck);rej(Object.assign(new Error,'AbortError'))});
+    es.onmessage=e=>{
+      last=Date.now();
+      try{
+        const m=JSON.parse(e.data);
+        if(m.msg==='estimation'){const q=m.queue_size||0;setStatus('⏳ File…',`Position: ${q} — ETA: ${m.rank_eta?Math.round(m.rank_eta)+'s':'…'}`,15+Math.min(q*4,25))}
+        else if(m.msg==='process_starts')setStatus('🔄 Génération…','Wan2.1 génère ta vidéo…',42,true);
+        else if(m.msg==='process_generating'){const p=m.progress||{};setStatus('🔄 Génération…',`Step ${p.index||'?'}/${p.length||'?'}`,p.index&&p.length?40+Math.round(p.index/p.length*50):55)}
+        else if(m.msg==='process_completed'){es.close();clearInterval(ck);setStatus('✅ Terminé !','Vidéo prête',100);handleResult(m.output,base);res()}
+        else if(m.msg==='queue_full'){es.close();clearInterval(ck);rej(new Error('File pleine'))}
+        else if(m.msg==='error'){es.close();clearInterval(ck);rej(new Error(m.message||'Erreur API'))}
+      }catch{}
+    };
+    es.onerror=()=>{es.close();clearInterval(ck);rej(new Error('Connexion SSE perdue'))}
+  })
+}
+
+async function genDirect(prompt,neg){
+  const base=A.api.url.replace(/\/$/,''),ep=A.api.ep||'/run/predict';
+  setStatus('📤 Envoi…','Requête directe',20);
+  const r=await fetch(`${base}${ep}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,negative_prompt:neg,resolution:A.api.res,num_frames:A.api.frames,seed:A.api.seed,guidance_scale:A.api.guidance,num_inference_steps:A.api.steps}),signal:A.abort.signal});
+  if(!r.ok)throw new Error(`HTTP ${r.status} ${r.statusText}`);
+  setStatus('⏳ Traitement…','En attente…',50,true);
+  handleResult(await r.json(),base)
+}
+
+function handleResult(out,base){
+  let url=null;
+  if(out?.data){const d=out.data,f=Array.isArray(d)?d[0]:d;if(typeof f==='string')url=f;else if(f?.name)url=`${base}/file=${f.name}`;else if(f?.url)url=f.url}
+  else if(typeof out==='string')url=out;
+  if(url){
+    if(!url.startsWith('http')&&!url.startsWith('blob'))url=`${base}/${url.replace(/^\//,'')}`;
+    showVid(url);autoSaveHist(url);toast('Vidéo générée ! 🎉','ok')
+  }else{setStatus('⚠ Résultat inattendu','Réponse inconnue — vérif console',100);console.log('API response:',out);toast('Réponse API non reconnue','er')}
+}
+
+function stopGen(){if(A.abort)A.abort.abort()}
+function dlVideo(){if(!A.vid)return;const a=document.createElement('a');a.href=A.vid;a.download=`wan2_${Date.now()}.mp4`;a.click()}
+
+// ─── HISTORY ──────────────────────────────────────────────────────────────────
+function autoSaveHist(url){
+  A.hist.unshift({id:Date.now(),date:new Date().toLocaleString('fr-FR'),prompt:A.prompt||document.getElementById('genPrompt').value,style:A.sc.style,moment:A.sc.moment,video:url});
+  if(A.hist.length>80)A.hist.pop();
+  lss('wan_hist',A.hist)
+}
+function saveHist(){if(!A.vid){toast('Aucune vidéo','er');return}autoSaveHist(A.vid);toast('Sauvegardé !','ok')}
+
+function renderHist(){
+  const g=document.getElementById('histGrid');
+  if(!A.hist.length){g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">📚</div><p>Aucune génération</p><button class="btn" onclick="show(\'scene\')">Créer une scène</button></div>';return}
+  g.innerHTML='';
+  A.hist.forEach((h,i)=>{
+    const c=document.createElement('div');c.className='hc';
+    c.innerHTML=`<div class="ht2">${h.video?`<video src="${h.video}" muted loop onmouseenter="this.play()" onmouseleave="this.pause()"></video>`:'🎬'}</div>
+      <div class="hi">
+        <div class="hd">📅 ${h.date} <span class="tag" style="font-size:10px">${h.style}</span></div>
+        <div class="hp">${esc(h.prompt)}</div>
+        <div class="ha">
+          <button class="btn btn-sm" onclick="reuse(${i})">🔄 Réutiliser</button>
+          ${h.video?`<button class="btn btn-sm btn-ol" onclick="dlHist('${h.video}')">⬇</button>`:''}
+          <button class="btn btn-sm btn-er" onclick="delHist(${i})">✕</button>
+        </div>
+      </div>`;
+    g.appendChild(c)
+  })
+}
+
+function reuse(i){const h=A.hist[i];document.getElementById('genPrompt').value=h.prompt;document.querySelectorAll('#g-style .pill').forEach(p=>p.classList.toggle('active',p.dataset.v===h.style));A.sc.style=h.style;show('scene');toast('Prompt restauré !','ok')}
+function dlHist(url){const a=document.createElement('a');a.href=url;a.download=`wan2_${Date.now()}.mp4`;a.click()}
+function delHist(i){A.hist.splice(i,1);lss('wan_hist',A.hist);renderHist()}
+function clearHist(){if(!confirm('Effacer tout l\'historique ?'))return;A.hist=[];lss('wan_hist',A.hist);renderHist();toast('Historique effacé','in')}
+
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+function openCfg(){
+  document.getElementById('cfgUrl').value=A.api.url;
+  document.getElementById('cfgType').value=A.api.type;
+  document.getElementById('cfgEp').value=A.api.ep;
+  document.getElementById('cfgRes').value=A.api.res;
+  document.getElementById('cfgFrames').value=A.api.frames;
+  document.getElementById('cfgSteps').value=A.api.steps;
+  document.getElementById('cfgGuidance').value=A.api.guidance;
+  document.getElementById('cfgSeed').value=A.api.seed;
+  document.getElementById('moConfig').classList.add('open')
+}
+function closeCfg(){document.getElementById('moConfig').classList.remove('open')}
+
+function saveCfg(){
+  A.api.url=document.getElementById('cfgUrl').value.trim();
+  A.api.type=document.getElementById('cfgType').value;
+  A.api.ep=document.getElementById('cfgEp').value.trim();
+  A.api.res=document.getElementById('cfgRes').value;
+  A.api.frames=+document.getElementById('cfgFrames').value;
+  A.api.steps=+document.getElementById('cfgSteps').value;
+  A.api.guidance=+document.getElementById('cfgGuidance').value;
+  A.api.seed=+document.getElementById('cfgSeed').value;
+  lss('wan_url',A.api.url);lss('wan_type',A.api.type);lss('wan_ep',A.api.ep);
+  lss('wan_res',A.api.res);lss('wan_frames',A.api.frames);lss('wan_steps',A.api.steps);
+  lss('wan_guidance',A.api.guidance);lss('wan_seed',A.api.seed);
+  closeCfg();toast('Configuration sauvegardée !','ok')
+}
+
+async function testApi(){
+  const url=document.getElementById('cfgUrl').value.trim();
+  toast('Test vers '+url+'…','in');
+  try{
+    const r=await fetch(`${url}/info`,{signal:AbortSignal.timeout(6000)});
+    toast(r.ok?'Connexion réussie ✅ API Gradio détectée':'Réponse '+r.status+' — API peut-être active',r.ok?'ok':'in')
+  }catch(e){toast('Connexion échouée — vérif URL ou démarre Wan2.1','er')}
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg,type='in'){
+  const t=document.getElementById('toast'),el=document.createElement('div');
+  el.className=`ti ${type}`;el.textContent=msg;t.appendChild(el);
+  setTimeout(()=>el.remove(),4000)
+}
+
+// ─── MODAL CLOSE ON OVERLAY ───────────────────────────────────────────────────
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+updCharPills();
+updPrompt();
+</script>
+</body>
+</html>
